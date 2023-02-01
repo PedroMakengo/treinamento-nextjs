@@ -1,4 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
+
+import { Link } from "react-router-dom";
 
 import { FaGithub, FaPlus, FaSpinner, FaBars, FaTrash } from "react-icons/fa";
 
@@ -14,14 +16,39 @@ export default function Main() {
   const [newRepo, setNewRepo] = useState("");
   const [repositorios, setRepositorios] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState(false);
+
+  // Buscar;
+  useEffect(() => {
+    const repoStorage = localStorage.getItem("repos");
+
+    if (repoStorage) {
+      return setRepositorios(JSON.parse(repoStorage));
+    }
+  }, []);
+
+  // Salvar alterações
+  useEffect(() => {
+    localStorage.setItem("repos", JSON.stringify(repositorios));
+  }, [repositorios]);
 
   const handleSubmit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault();
       async function submit() {
         setLoading(true);
+        setAlert(false);
         try {
+          if (newRepo === "") {
+            throw new Error("Você precisa indicar um repositório");
+          }
           const response = await api.get(`repos/${newRepo}`);
+
+          const hasRepo = repositorios.find(repo => repo.name === newRepo);
+
+          if (hasRepo) {
+            throw new Error("Repositório Duplicado");
+          }
 
           const data = {
             name: response.data.full_name,
@@ -31,6 +58,7 @@ export default function Main() {
           setNewRepo("");
         } catch (error) {
           console.log(error);
+          setAlert(true);
         } finally {
           setLoading(false);
         }
@@ -82,9 +110,9 @@ export default function Main() {
               </button>
               {repo.name}
             </span>
-            <a href="/">
+            <Link to={`/repositorio/${encodeURIComponent(repo.name)}`}>
               <FaBars size={20} />
-            </a>
+            </Link>
           </li>
         ))}
       </List>
