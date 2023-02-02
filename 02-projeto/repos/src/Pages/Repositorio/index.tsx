@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Container, Loading, IssuesList } from "./style";
+import {
+  Container,
+  Loading,
+  IssuesList,
+  PageActions,
+  FilterList,
+} from "./style";
 
 import { FaArrowLeft } from "react-icons/fa";
 import { useParams, Link } from "react-router-dom";
@@ -13,9 +19,21 @@ export default function Repositorio() {
   const [issues, setIssues] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
+  const [filters, setFilters] = useState([
+    { state: "all", label: "Todas", active: true },
+    { state: "open", label: "Abertas", active: false },
+    { state: "closed", label: "Fechadas", active: false },
+  ]);
+
+  const [page, setPage] = useState(1);
+
   useEffect(() => {
     async function load() {
       const nomeRepo = repositorio;
+
+      let active = filters.find((f: any) => f.active);
+
+      // console.log(active.state);
 
       const [repositorioData, issuesData] = await Promise.all([
         api.get(`/repos/${nomeRepo}`),
@@ -37,6 +55,27 @@ export default function Repositorio() {
     load();
   }, [repositorio]);
 
+  useEffect(() => {
+    async function loadIssue() {
+      const nomeRepo = repositorio;
+
+      const response = await api.get(`/repos/${nomeRepo}/issues`, {
+        params: {
+          state: "open",
+          page,
+          per_page: 5,
+        },
+      });
+
+      setIssues(response.data);
+    }
+    loadIssue();
+  }, [repositorio, page]);
+
+  function handlePage(action: any) {
+    setPage(action === "back" ? page - 1 : page + 1);
+  }
+
   if (loading) {
     return (
       <Loading>
@@ -56,6 +95,14 @@ export default function Repositorio() {
       </div>
 
       <IssuesList>
+        <FilterList>
+          {filters.map((filter, index) => (
+            <button type="button" key={filter.label} onClick={() => {}}>
+              {filter.label}
+            </button>
+          ))}
+        </FilterList>
+
         {issues.map((issue: any) => (
           <li key={String(issue.id)}>
             <img src={issue.user.avatar_url} alt={issue.user.login} />
@@ -73,6 +120,19 @@ export default function Repositorio() {
           </li>
         ))}
       </IssuesList>
+
+      <PageActions>
+        <button
+          type="button"
+          onClick={() => handlePage("back")}
+          disabled={page < 2}
+        >
+          Anterior
+        </button>
+        <button type="button" onClick={() => handlePage("next")}>
+          Proxima
+        </button>
+      </PageActions>
     </Container>
   );
 }
