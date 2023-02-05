@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "firebase": "^9.17.1",
     "next-auth": "^3.26.1"
   },
   "devDependencies": {
