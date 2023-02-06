@@ -1,3 +1,4 @@
+import { useState, FormEvent } from "react";
 import Head from "next/head";
 
 import { authOptions } from "../api/auth/[...nextauth]";
@@ -8,15 +9,55 @@ import styles from "./style.module.scss";
 import { FiPlus, FiCalendar, FiEdit2, FiTrash, FiClock } from "react-icons/fi";
 import { SupportButton } from "../../components/SupportButton";
 
-export default function Board() {
+import firebase from "../../services/firebaseConnection";
+
+interface BoardProps {
+  user: {
+    id: string;
+    name: string;
+  };
+}
+
+export default function Board({ user }: BoardProps) {
+  const [input, setInput] = useState("");
+
+  async function handleAddTask(e: FormEvent) {
+    e.preventDefault();
+
+    if (input === "") {
+      alert("Preencha alguma tarefa!");
+      return;
+    }
+
+    await firebase
+      .firestore()
+      .collection("tarefas")
+      .add({
+        created: new Date(),
+        tarefa: input,
+        userId: user.id,
+        nome: user.name,
+      })
+      .then(doc => {
+        console.log("Cadastrado com sucesso!");
+      })
+      .catch(error => {
+        console.log("Erro ao cadastrar", error);
+      });
+  }
   return (
     <>
       <Head>
         <title>Minhas tarefas - Board</title>
       </Head>
       <main className={styles.container}>
-        <form>
-          <input type="text" placeholder="Digite a sua tarefa..." />
+        <form onSubmit={handleAddTask}>
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Digite a sua tarefa..."
+          />
           <button type="submit">
             <FiPlus size={25} color="#17181F" />
           </button>
@@ -66,7 +107,6 @@ export default function Board() {
 export async function getServerSideProps({ req, res }) {
   const session = await getServerSession(req, res, authOptions);
 
-  console.log(session);
   if (!session) {
     return {
       redirect: {
@@ -75,7 +115,15 @@ export async function getServerSideProps({ req, res }) {
       },
     };
   }
+
+  const user = {
+    name: session?.user.name,
+    id: session?.user.email,
+  };
+
+  console.log(user);
+
   return {
-    props: {},
+    props: { user },
   };
 }
