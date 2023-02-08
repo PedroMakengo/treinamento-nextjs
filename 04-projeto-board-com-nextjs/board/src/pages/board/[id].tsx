@@ -1,11 +1,14 @@
 import Head from "next/head";
 
+import styles from "./task.module.scss";
+
 import { GetServerSideProps } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]";
 
 import firebase from "../../services/firebaseConnection";
 import { format } from "date-fns";
+import { FiCalendar } from "react-icons/fi";
 
 type Task = {
   id: string;
@@ -28,13 +31,15 @@ export default function Task({ data }: TaskListProps) {
       <Head>
         <title>Detalhes da sua tarefa</title>
       </Head>
-      <article>
-        <div>
+      <article className={styles.container}>
+        <div className={styles.actions}>
           <div>
-            <h1>Página detalhes</h1>
-            <h2>{task.tarefa}</h2>
+            <FiCalendar size={30} color="#fff" />
+            <span>Tarefa criada:</span>
+            <time>{task.createdFormated}</time>
           </div>
         </div>
+        <p>{task.tarefa}</p>
       </article>
     </>
   );
