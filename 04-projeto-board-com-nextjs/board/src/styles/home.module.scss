@@ -2,6 +2,8 @@
   max-width: 1120px;
   margin: 0 auto;
 
+  height: calc(95vh - 6rem);
+
   padding: 0 2rem;
 
   display: flex;
@@ -12,6 +14,7 @@
 
   img {
     margin-top: 2rem;
+    width: 40%;
   }
 }
 

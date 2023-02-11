@@ -5,6 +5,8 @@ import styles from "./style.module.scss";
 import { FaGithub } from "react-icons/fa";
 import { FiX } from "react-icons/fi";
 
+import Image from "next/image";
+
 export function SignInButton() {
   const { data: session } = useSession();
 
@@ -14,7 +16,12 @@ export function SignInButton() {
       className={styles.signInButton}
       onClick={() => signOut()}
     >
-      <img src={session.user.image} alt={session.user.name} />
+      <Image
+        width={35}
+        height={35}
+        src={session.user.image}
+        alt={session.user.name}
+      />
       {session.user.name}
       <FiX color="#737380" className={styles.closeIcon} />
     </button>

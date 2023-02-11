@@ -16,7 +16,9 @@ import {
   FiX,
 } from "react-icons/fi";
 import { SupportButton } from "../../components/SupportButton";
-import { format } from "date-fns";
+import { format, formatDistance } from "date-fns";
+
+import { ptBR } from "date-fns/locale";
 
 import firebase from "../../services/firebaseConnection";
 
@@ -33,6 +35,8 @@ interface BoardProps {
   user: {
     id: string;
     name: string;
+    vip: boolean;
+    lastDonate: string | Date;
   };
   data: string;
 }
@@ -90,7 +94,7 @@ export default function Board({ user, data }: BoardProps) {
           userId: user.id,
           nome: user.name,
         };
-        setTaskList(state => [...state, data]);
+        setTaskList([...taskList, data]);
         setInput("");
       })
       .catch(error => {
@@ -171,10 +175,12 @@ export default function Board({ user, data }: BoardProps) {
                     <FiCalendar size={20} color="#FFB800" />
                     <time>{task.createdFormated}</time>
                   </div>
-                  <button onClick={() => handleEdit(task)}>
-                    <FiEdit2 size={20} color="#fff" />
-                    <span>Editar</span>
-                  </button>
+                  {user.vip && (
+                    <button onClick={() => handleEdit(task)}>
+                      <FiEdit2 size={20} color="#fff" />
+                      <span>Editar</span>
+                    </button>
+                  )}
                 </div>
                 <button onClick={() => handleDelete(task.id)}>
                   <FiTrash size={20} color="#FF3636" />
@@ -186,13 +192,20 @@ export default function Board({ user, data }: BoardProps) {
         </section>
       </main>
 
-      <div className={styles.vipContainer}>
-        <h3>Obrigado po apoiar esse projeto.</h3>
-        <div>
-          <FiClock size={28} color="#fff" />
-          <time>Última doação foi a 3 dias.</time>
+      {user.vip && (
+        <div className={styles.vipContainer}>
+          <h3>Obrigado po apoiar esse projeto.</h3>
+          <div>
+            <FiClock size={28} color="#fff" />
+            <time>
+              Última doação foi a{" "}
+              {formatDistance(new Date(user.lastDonate), new Date(), {
+                locale: ptBR,
+              })}
+            </time>
+          </div>
         </div>
-      </div>
+      )}
 
       <SupportButton />
     </>
@@ -230,10 +243,16 @@ export async function getServerSideProps({ req, res }) {
     })
   );
 
+  // let dataDonate = session?.lastDonate;
+
   const user = {
     name: session?.user.name,
     id: session?.user.email,
+    vip: session?.vip,
+    lastDonate: `${session.lastDonate}`,
   };
+
+  console.log(user);
 
   return {
     props: { user, data },
